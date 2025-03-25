@@ -1,0 +1,6 @@
+# Ignore local files not needed in Docker image
+.git
+*.md
+*.log
+*.swp
+*.swo

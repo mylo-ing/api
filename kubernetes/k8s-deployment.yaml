@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fiber-gorm-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fiber-gorm-api
+  template:
+    metadata:
+      labels:
+        app: fiber-gorm-api
+    spec:
+      containers:
+      - name: fiber-gorm-api
+        image: fiber-gorm-api:latest
+        ports:
+        - containerPort: 3000
+        env:
+        # Postgres info
+        - name: DB_HOST
+          value: "your-postgres-host"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_USER
+          value: "postgres"
+        - name: DB_PASSWORD
+          value: "secret"
+        - name: DB_NAME
+          value: "subscribersdb"
+
+        # Application port
+        - name: APP_PORT
+          value: "3000"
+
+        # Redis env vars
+        - name: REDIS_HOST
+          value: "your-redis-host:6379"
+        - name: REDIS_SESSION_DB
+          value: "0"
+        - name: REDIS_PASSWORD
+          value: ""
+
+        # JWT secrets (e.g. for guests/users, or sign-in flows)
+        - name: JWT_GUEST_SECRET_KEY
+          value: "thisIsMyDevSecretKeyForGuests"
+        - name: JWT_USER_SECRET_KEY
+          value: "thisIsMyDevSecretKeyForUsers"
+
+        # SendGrid vars
+        - name: SENDGRID_API_KEY
+          value: ""
+        - name: SENDGRID_FROM_ADDRESS
+          value: "no-reply@example.com"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fiber-gorm-api-service
+spec:
+  selector:
+    app: fiber-gorm-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000

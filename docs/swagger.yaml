@@ -1,0 +1,282 @@
+basePath: /
+definitions:
+  models.Subscriber:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      subscriber_types:
+        items:
+          $ref: '#/definitions/models.SubscriberType'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  models.SubscriberType:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        description: references the custom ENUM
+        type: string
+      subscriber_id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+host: localhost:3517
+info:
+  contact:
+    email: info@mylo.ing
+    name: myLo API Support
+    url: https://github.com/mylo-ing/api/issues
+  description: The myLocal headless API is built in Go with Fiber and GORM.
+  license:
+    name: AGPLv3
+  title: myLocal Headless API
+  version: "1.0"
+paths:
+  /admin/subscribers:
+    get:
+      description: Returns a list of all subscribers, including their subscriber_types
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Subscriber'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get all subscribers
+      tags:
+      - subscribers
+    post:
+      consumes:
+      - application/json
+      description: Creates a new subscriber record, optionally with multiple subscriber_types.
+        Validates email & name.
+      parameters:
+      - description: Subscriber info (with subscriber_types optional)
+        in: body
+        name: subscriber
+        required: true
+        schema:
+          $ref: '#/definitions/models.Subscriber'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Subscriber'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create a new subscriber
+      tags:
+      - subscribers
+  /admin/subscribers/{id}:
+    delete:
+      description: Deletes subscriber by id (and associated subscriber_types).
+      parameters:
+      - description: Subscriber ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Delete a subscriber
+      tags:
+      - subscribers
+    get:
+      description: Gets subscriber by id, including all subscriber_types
+      parameters:
+      - description: Subscriber ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Subscriber'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get a single subscriber
+      tags:
+      - subscribers
+    put:
+      consumes:
+      - application/json
+      description: Updates subscriber by id. If subscriber_types are provided, it
+        overwrites them. Validates email & name.
+      parameters:
+      - description: Subscriber ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Subscriber info (subscriber_types optional)
+        in: body
+        name: subscriber
+        required: true
+        schema:
+          $ref: '#/definitions/models.Subscriber'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Subscriber'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Update a subscriber
+      tags:
+      - subscribers
+  /signin/request:
+    post:
+      consumes:
+      - application/json
+      description: Takes an email, generates a 6-digit code, stores in Redis, sends
+        via SendGrid
+      parameters:
+      - description: e.g. { \
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Code sent
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: Request Sign In
+      tags:
+      - signin
+  /signin/verify:
+    post:
+      consumes:
+      - application/json
+      description: Takes an email and 6-digit code. If valid, generate JWT & store
+        session in redis
+      parameters:
+      - description: e.g. { \
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWT returned
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: Verify Sign In Code
+      tags:
+      - signin
+  /signup/subscribers:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new subscriber record, optionally with multiple subscriber_types.
+        Validates email & name.
+      parameters:
+      - description: Subscriber info (with subscriber_types optional)
+        in: body
+        name: subscriber
+        required: true
+        schema:
+          $ref: '#/definitions/models.Subscriber'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Subscriber'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create a new subscriber
+      tags:
+      - subscribers
+swagger: "2.0"

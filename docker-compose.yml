@@ -1,0 +1,115 @@
+services:
+  db:
+    image: postgis/postgis:17-3.5
+    container_name: mylocal_db
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password_for_dev_only
+      - POSTGRES_DB=postgres
+    volumes:
+      - mylocal_db_volume:/var/lib/postgresql/data
+      - ./dbshell:/docker-entrypoint-initdb.d/
+    networks:
+      - fullstack
+
+  # NEW REDIS SERVICE
+  redis:
+    image: redis:7.0-alpine
+    container_name: mylocal_redis
+    # If you need to connect from the host for debugging, you can expose the port:
+    # ports:
+    #   - "6379:6379"
+    # If you only need it inside Docker, you can omit the ports line.
+    networks:
+      - fullstack
+    # No volumes => ephemeral. If you want data persistence, add a volume here.
+
+  api:
+    container_name: mylocal_api
+    build: .
+    ports:
+      - '3517:3517'
+    environment:
+      - API_ENV=development
+      - APP_PORT=3517
+      - DB_HOST=mylocal_db
+      - DB_NAME=my_local
+      - DB_USER=api_worker
+      - DB_PASSWORD=password_for_dev_only
+      - DB_ADMIN_USER=api_admin
+      - DB_ADMIN_PASSWORD=password_for_dev_only
+      - DB_PORT=5432
+      - DB_SSL_MODE=disable
+
+      # JWT variables
+      - JWT_GUEST_SECRET_KEY=thisIsMyDevSecretKeyForGuests
+      - JWT_USER_SECRET_KEY=thisIsMyDevSecretKeyForUsers
+
+      # REDIS variables: **point to the 'redis' service** 
+      - REDIS_HOST=mylocal_redis:6379
+      - REDIS_SESSION_DB=0
+      - REDIS_ENTITY_DB=1
+      - REDIS_PASSWORD=
+
+      # SENDGRID variables (leave blank for tests or fill in for production)
+      - SENDGRID_API_KEY=
+      - SENDGRID_FROM_ADDRESS=no-reply@example.com
+
+    volumes:
+      - mylocal_api_volume:/usr/src/app/
+    command: >
+      sh -c "sleep 10 &&
+             PGPASSWORD=password_for_dev_only psql -h db -U postgres -d postgres -f ./migrations/migration.sql &&
+             ./main"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - fullstack
+
+  test:
+    container_name: mylocal_api_test
+    build: .
+    environment:
+      - API_ENV=test
+      - DB_HOST=mylocal_db
+      - DB_NAME=my_local
+      - DB_USER=api_worker
+      - DB_PASSWORD=password_for_dev_only
+      - DB_ADMIN_USER=api_admin
+      - DB_ADMIN_PASSWORD=password_for_dev_only
+      - DB_PORT=5432
+      - DB_SSL_MODE=disable
+
+      # JWT variables
+      - JWT_GUEST_SECRET_KEY=thisIsMyDevSecretKeyForGuests
+      - JWT_USER_SECRET_KEY=thisIsMyDevSecretKeyForUsers
+
+      # REDIS variables: **point to the 'redis' service** 
+      - REDIS_HOST=mylocal_redis:6379
+      - REDIS_SESSION_DB=0
+      - REDIS_ENTITY_DB=1
+      - REDIS_PASSWORD=
+
+      # SENDGRID variables (leave blank for tests or fill in for production)
+      - SENDGRID_API_KEY=
+      - SENDGRID_FROM_ADDRESS=no-reply@example.com
+
+    depends_on:
+      - db
+      - redis
+    networks:
+      - fullstack
+    command: >
+      sh -c "sleep 10 &&
+             go test ./..."
+
+volumes:
+  mylocal_db_volume:
+  mylocal_api_volume:
+
+networks:
+  fullstack:
+    driver: bridge

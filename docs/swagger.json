@@ -1,0 +1,420 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "The myLocal headless API is built in Go with Fiber and GORM.",
+        "title": "myLocal Headless API",
+        "contact": {
+            "name": "myLo API Support",
+            "url": "https://github.com/mylo-ing/api/issues",
+            "email": "info@mylo.ing"
+        },
+        "license": {
+            "name": "AGPLv3"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:3517",
+    "basePath": "/",
+    "paths": {
+        "/admin/subscribers": {
+            "get": {
+                "description": "Returns a list of all subscribers, including their subscriber_types",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscribers"
+                ],
+                "summary": "Get all subscribers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Subscriber"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new subscriber record, optionally with multiple subscriber_types. Validates email \u0026 name.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscribers"
+                ],
+                "summary": "Create a new subscriber",
+                "parameters": [
+                    {
+                        "description": "Subscriber info (with subscriber_types optional)",
+                        "name": "subscriber",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Subscriber"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Subscriber"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/subscribers/{id}": {
+            "get": {
+                "description": "Gets subscriber by id, including all subscriber_types",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscribers"
+                ],
+                "summary": "Get a single subscriber",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscriber ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Subscriber"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates subscriber by id. If subscriber_types are provided, it overwrites them. Validates email \u0026 name.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscribers"
+                ],
+                "summary": "Update a subscriber",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscriber ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Subscriber info (subscriber_types optional)",
+                        "name": "subscriber",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Subscriber"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Subscriber"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes subscriber by id (and associated subscriber_types).",
+                "tags": [
+                    "subscribers"
+                ],
+                "summary": "Delete a subscriber",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscriber ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/signin/request": {
+            "post": {
+                "description": "Takes an email, generates a 6-digit code, stores in Redis, sends via SendGrid",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "signin"
+                ],
+                "summary": "Request Sign In",
+                "parameters": [
+                    {
+                        "description": "e.g. { \\",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Code sent",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/signin/verify": {
+            "post": {
+                "description": "Takes an email and 6-digit code. If valid, generate JWT \u0026 store session in redis",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "signin"
+                ],
+                "summary": "Verify Sign In Code",
+                "parameters": [
+                    {
+                        "description": "e.g. { \\",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JWT returned",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/signup/subscribers": {
+            "post": {
+                "description": "Creates a new subscriber record, optionally with multiple subscriber_types. Validates email \u0026 name.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscribers"
+                ],
+                "summary": "Create a new subscriber",
+                "parameters": [
+                    {
+                        "description": "Subscriber info (with subscriber_types optional)",
+                        "name": "subscriber",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Subscriber"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Subscriber"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.Subscriber": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "subscriber_types": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.SubscriberType"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.SubscriberType": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "references the custom ENUM",
+                    "type": "string"
+                },
+                "subscriber_id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
